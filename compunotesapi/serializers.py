@@ -9,18 +9,23 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'password']
 
 class TagSerializer(serializers.ModelSerializer):
+    files = serializers.SlugRelatedField(many=True, read_only=True, slug_field='id')
 
     class Meta:
         model = Tag
-        fields = ['id', 'name']
-
-class RatingSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Rating
+        fields = ['id', 'name', 'files']
 
 class FileSerializer(serializers.ModelSerializer):
+    tags = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
+    user = serializers.SlugRelatedField(read_only=True, slug_field='username')
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = File
-        fields = ['id', 'path', 'tags']
+        fields = ['id', 'title', 'path', 'user', 'tags', 'rating']
+
+    def get_rating(self, obj):
+        ratings = Rating.objects.filter(file_id=obj.id)
+        if ratings:
+            return sum([rating.rating for rating in ratings]) / len(ratings)
+        return 0
