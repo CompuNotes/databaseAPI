@@ -93,6 +93,9 @@ DATABASES = {
         'PASSWORD': DB_PASSWORD,
         'HOST': DB_HOST,
         'PORT': DB_PORT,
+        'OPTIONS': {
+            'init_command': 'ALTER DATABASE compunotes CHARACTER SET utf8mb4 COLLATE utf8mb4_bin',
+        },
     }
 }
 
