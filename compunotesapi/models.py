@@ -9,16 +9,25 @@ from django.db import models
 
 
 class File(models.Model):
-    path = models.CharField(max_length=255, db_collation='utf8mb3_general_ci')
+    path = models.CharField(max_length=255, db_collation='utf8mb4_bin')
     user = models.ForeignKey('User', models.DO_NOTHING, blank=True, null=True)
+    tags = models.ManyToManyField(
+        'Tag', through='FileTag')
 
     class Meta:
         managed = True
         db_table = 'FILE'
 
+class Tag(models.Model):
+    name = models.CharField(max_length=255, db_collation='utf8mb4_bin')
+
+    class Meta:
+        managed = True
+        db_table = 'TAG'
+
 
 class FileTag(models.Model):
-    tag = models.OneToOneField('Tag', models.DO_NOTHING, primary_key=True)  # The composite primary key (tag_id, file_id) found, that is not supported. The first column is selected.
+    tag = models.ForeignKey(Tag, models.DO_NOTHING)
     file = models.ForeignKey(File, models.DO_NOTHING)
 
     class Meta:
@@ -38,18 +47,10 @@ class Rating(models.Model):
         unique_together = (('user', 'file'),)
 
 
-class Tag(models.Model):
-    name = models.CharField(max_length=255, db_collation='utf8mb4_general_ci')
-
-    class Meta:
-        managed = True
-        db_table = 'TAG'
-
-
 class User(models.Model):
-    username = models.CharField(unique=True, max_length=255, db_collation='utf8mb4_general_ci')
-    email = models.CharField(unique=True, max_length=255, db_collation='utf8mb4_general_ci')
-    password = models.CharField(max_length=255, db_collation='utf8mb4_general_ci')
+    username = models.CharField(unique=True, max_length=255, db_collation='utf8mb4_bin')
+    email = models.CharField(unique=True, max_length=255, db_collation='utf8mb4_bin')
+    password = models.CharField(max_length=255, db_collation='utf8mb4_bin')
 
     class Meta:
         managed = True
