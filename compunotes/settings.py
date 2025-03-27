@@ -77,7 +77,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'compunotes.wsgi.application'
 
-
+os.environ['wsgi.url_scheme'] = 'https'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
