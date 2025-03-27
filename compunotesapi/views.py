@@ -1,12 +1,8 @@
-from django.shortcuts import render
-import statistics
 from rest_framework import viewsets
-
-# Create your views here.
-from django.http import HttpResponse
+from rest_framework.response import Response
 
 from .models import User, File, Tag
-from .serializers import UserSerializer, FileSerializer, TagSerializer
+from .serializers import UserSerializer, FileSerializer, TagSerializer, UploadSerializer
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = UserSerializer
@@ -53,3 +49,15 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
             return queryset
         else:
             return Tag.objects.all()
+
+class UploadViewSet(viewsets.ModelViewSet):
+    serializer_class = UploadSerializer
+
+    def list(self, request):
+        return Response("GET API")
+
+    def create(self, request):
+        file_uploaded = request.FILES.get('file_uploaded')
+        content_type = file_uploaded.content_type
+        response = "POST API and you have uploaded a {} file".format(content_type)
+        return Response(response)
