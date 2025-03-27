@@ -3,6 +3,7 @@ from .models import User, Tag, Rating, File
 
 
 class UserSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(max_length=255, allow_blank=False)
 
     class Meta:
         model = User

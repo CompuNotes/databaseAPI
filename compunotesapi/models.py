@@ -13,7 +13,7 @@ class Tag(models.Model):
 
 
 class File(models.Model):
-    path = models.CharField(max_length=255, blank=False, null=False, unique=True)
+    path = models.FilePathField(max_length=255, blank=False, null=False, unique=True, path='/home/compunotes/files', recursive=True)
     title = models.CharField(max_length=255, blank=False, null=True, unique=True)
     user = models.ForeignKey('User', models.SET_NULL, null=True)
     tags = models.ManyToManyField(Tag, related_name='files', blank=True)
@@ -22,8 +22,8 @@ class File(models.Model):
         db_table = 'file'
 
     def __str__(self):
-        if self.username is not None:
-            return self.username
+        if self.title is not None:
+            return self.title
         return "Unknown title"
 
 
