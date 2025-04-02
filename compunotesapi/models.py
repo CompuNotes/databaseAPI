@@ -12,7 +12,7 @@ class Tag(models.Model):
 
 def user_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
-    return "user_{0}/{1}".format(instance.user.id, filename)
+    return "{0}/{1}".format(instance.user.id, filename)
 
 class File(models.Model):
     file = models.FileField(upload_to=user_directory_path, blank=False, unique=True, null=False)
