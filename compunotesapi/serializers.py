@@ -1,3 +1,5 @@
+from email.policy import default
+
 from rest_framework import serializers
 from .models import User, Tag, Rating, File
 
@@ -18,9 +20,11 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'files']
 
 class FileSerializer(serializers.ModelSerializer):
-    tags = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
+    id = serializers.IntegerField(read_only=True)
+    tags = serializers.SlugRelatedField(many=True, slug_field='name', queryset=Tag.objects.all())
     user = serializers.SlugRelatedField(read_only=True, slug_field='username')
-    rating = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField(read_only=True)
+    file = serializers.FileField()
 
     class Meta:
         model = File
@@ -32,9 +36,8 @@ class FileSerializer(serializers.ModelSerializer):
             return sum([rating.rating for rating in ratings]) / len(ratings)
         return 0
 
-class UploadSerializer(serializers.ModelSerializer):
-    file_uploaded = serializers.FileField()
-
-    class Meta:
-        model = File
-        fields = ['file_uploaded', 'title', 'user', 'tags']
+    def create(self, validated_data):
+        tags = validated_data.pop('tags')
+        file = File.objects.create(**validated_data)
+        file.tags.set(tags)
+        return file

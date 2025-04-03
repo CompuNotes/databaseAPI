@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 
 from .models import User, File, Tag
-from .serializers import UserSerializer, FileSerializer, TagSerializer, UploadSerializer
+from .serializers import UserSerializer, FileSerializer, TagSerializer
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = UserSerializer
@@ -19,7 +19,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         else:
             return User.objects.all()
 
-class FileViewSet(viewsets.ReadOnlyModelViewSet):
+class FileViewSet(viewsets.ModelViewSet):
     serializer_class = FileSerializer
 
     def get_queryset(self):
@@ -33,6 +33,12 @@ class FileViewSet(viewsets.ReadOnlyModelViewSet):
             return queryset
         else:
             return File.objects.all()
+
+    def create(self, request):
+        file_uploaded = request.FILES.get('file_uploaded')
+        content_type = file_uploaded.content_type
+        response = "POST API and you have uploaded a {} file".format(content_type)
+        return Response(status=204)
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TagSerializer
@@ -49,15 +55,3 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
             return queryset
         else:
             return Tag.objects.all()
-
-class UploadViewSet(viewsets.ModelViewSet):
-    serializer_class = UploadSerializer
-
-    def list(self, request):
-        return Response("GET API")
-
-    def create(self, request):
-        file_uploaded = request.FILES.get('file_uploaded')
-        content_type = file_uploaded.content_type
-        response = "POST API and you have uploaded a {} file".format(content_type)
-        return Response(response)
