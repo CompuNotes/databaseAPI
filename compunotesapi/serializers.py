@@ -1,16 +1,34 @@
-from email.policy import default
-
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from .models import User, Tag, Rating, File
 
-
 class UserSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(max_length=255, allow_blank=False)
-    password = serializers.CharField(max_length=255, allow_blank=False, style={'input_type': 'password'})
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password']
+        fields = ['id', 'email', 'username', 'password']
+        extra_kwargs = {'password': {'write_only': True, 'required': True}}
+
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        password = validated_data.pop('password')
+        return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        user = super().update(instance, validated_data)
+        if 'password' in validated_data:
+            user.set_password(password)
+            user.save()
+        return user
+
+class LoginSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['email', 'password']
+        extra_kwargs = {'password': {'write_only': True, 'required': True}}
 
 class TagSerializer(serializers.ModelSerializer):
     files = serializers.SlugRelatedField(many=True, read_only=True, slug_field='id')

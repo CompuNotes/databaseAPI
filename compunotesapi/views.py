@@ -1,23 +1,23 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, generics
 from rest_framework.response import Response
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from django.contrib.auth import get_user_model, authenticate
 
 from .models import User, File, Tag
 from .serializers import UserSerializer, FileSerializer, TagSerializer
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet):
+User = get_user_model()
+
+class UserList(generics.ListCreateAPIView):
+    queryset = User.objects.all()
     serializer_class = UserSerializer
 
-    def get_queryset(self):
-        id = self.request.query_params.get('id')
-        username = self.request.query_params.get('username')
-        if id is not None:
-            queryset = User.objects.filter(id=id)
-            return queryset
-        elif username is not None:
-            queryset = User.objects.filter(username=username)
-            return queryset
-        else:
-            return User.objects.all()
+
+class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 class FileViewSet(viewsets.ModelViewSet):
     serializer_class = FileSerializer

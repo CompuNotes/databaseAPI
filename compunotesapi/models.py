@@ -1,5 +1,8 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin,  AbstractUser
+from django import forms
 from django.db import models
+
 
 class Tag(models.Model):
     name = models.CharField(max_length=255)
@@ -38,14 +41,34 @@ class Rating(models.Model):
         db_table = 'rating'
         unique_together = (('user_id', 'file_id'),)
 
+class UserManager(BaseUserManager):
+    def create_user(self, email, password, **extra_fields):
+        if not email:
+            raise ValueError('El email es obligatorio.')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
 
-class User(models.Model):
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_staff', True)
+        return self.create_user(email, password, **extra_fields)
+
+class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(unique=True, max_length=255, blank=False, null=False)
     email = models.CharField(unique=True, max_length=255, blank=False, null=False)
     password = models.CharField(max_length=255, blank=False, null=False)
+    is_staff = models.BooleanField(default=False)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
 
     class Meta:
         db_table = 'user'
 
+    objects = UserManager()
+
     def __str__(self):
-        return self.username
+        return self.email
