@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework import routers
 from .views import FileViewSet, TagViewSet, UserList, UserDetail
-from rest_framework.authtoken.views import obtain_auth_token
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 
 router = routers.DefaultRouter()
@@ -10,7 +10,8 @@ router.register(r'tag', TagViewSet, basename='tag')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('', UserList.as_view(), name='user-list'),
+    path('users/', UserList.as_view(), name='user-list'),
     path('<int:pk>/', UserDetail.as_view(), name='user-detail'),
-    path('login/', obtain_auth_token, name='api_token_auth'),
+    path('login/', TokenObtainPairView.as_view(), name='api_jwt_token_auth'),
+    path('token_refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
