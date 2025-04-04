@@ -1,11 +1,11 @@
-from rest_framework import viewsets, generics
+from rest_framework import viewsets, generics, status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 
-from .models import File, Tag
+from .models import File, Tag, Rating
 from .serializers import UserSerializer, FileSerializer, TagSerializer
 
 User = get_user_model()
@@ -65,27 +65,80 @@ class FileViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def add_tag(self, request, pk=None):
         file = self.get_object()
-        tag_id = request.data.get('tag')
-        if tag_id:
-            tag, created = Tag.objects.get_or_create(id=tag_id)
-            file.tags.add(tag)
-            return Response({'status': 'tag added'})
+        user = request.user
+        if user.is_staff or user.is_superuser or file.user == user:
+            tag_id = request.data.get('tag')
+            if tag_id:
+                try:
+                    tag = Tag.objects.get(id=tag_id)
+                    file.tags.add(tag)
+                    return Response({'status': 'tag added'})
+                except Tag.DoesNotExist:
+                    return Response({'detail': 'Tag not found.'}, status=status.HTTP_404_NOT_FOUND)
+            else:
+                return Response({'detail': 'No tag provided.'}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'detail': 'No tag provided.'}, status=400)
+            return Response({'detail': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def remove_tag(self, request, pk=None):
         file = self.get_object()
-        tag_id = request.data.get('tag')
-        if tag_id:
-            try:
-                tag = Tag.objects.get(id=tag_id)
-                file.tags.remove(tag)
-                return Response({'status': 'tag removed'})
-            except Tag.DoesNotExist:
-                return Response({'detail': 'Tag not found.'}, status=404)
+        user = request.user
+        if user.is_staff or user.is_superuser or file.user == user:
+            tag_id = request.data.get('tag')
+            if tag_id:
+                try:
+                    tag = Tag.objects.get(id=tag_id)
+                    file.tags.remove(tag)
+                    return Response({'status': 'tag removed'})
+                except Tag.DoesNotExist:
+                    return Response({'detail': 'Tag not found.'}, status=status.HTTP_404_NOT_FOUND)
+            else:
+                return Response({'detail': 'No tag provided.'}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'detail': 'No tag provided.'}, status=400)
+            return Response({'detail': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def add_rating(self, request, pk=None):
+        file = self.get_object()
+        user = request.user
+        rating_value = request.data.get('rating')
+
+        if not rating_value:
+            return Response({'detail': 'No rating provided.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            rating_value = int(rating_value)
+            if rating_value < 1 or rating_value > 5:
+                return Response({'detail': 'Rating must be between 1 and 5.'}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError:
+            return Response({'detail': 'Invalid rating value.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        rating, created = Rating.objects.update_or_create(
+            user_id=user,
+            file_id=file,
+            defaults={'rating': rating_value}
+        )
+
+        if created:
+            return Response({'status': 'rating added'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'status': 'rating updated'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
+    def remove_rating(self, request, pk=None):
+        file = self.get_object()
+        user = request.user
+
+        try:
+            rating = Rating.objects.get(user_id=user, file_id=file)
+            if user.is_staff or rating.user_id == user:
+                rating.delete()
+                return Response({'status': 'rating removed'}, status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response({'detail': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
+        except Rating.DoesNotExist:
+            return Response({'detail': 'Rating not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TagSerializer
