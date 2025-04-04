@@ -29,7 +29,7 @@ class LoginSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'password']
+        fields = ['username', 'password']
         extra_kwargs = {'password': {'write_only': True, 'required': True}}
 
 class TagSerializer(serializers.ModelSerializer):
@@ -58,6 +58,9 @@ class FileSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
+        request = self.context.get('request', None)
+        if request and hasattr(request, 'user'):
+            validated_data['user'] = request.user
         file = File.objects.create(**validated_data)
         file.tags.set(tags)
         return file

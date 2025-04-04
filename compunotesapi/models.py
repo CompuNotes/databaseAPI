@@ -1,6 +1,5 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin,  AbstractUser
-from django import forms
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 
 
@@ -14,7 +13,7 @@ class Tag(models.Model):
         return self.name
 
 def user_directory_path(instance, filename):
-    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
+    # file will be uploaded to MEDIA_ROOT/<id>/<filename>
     return "{0}/{1}".format(instance.user.id, filename)
 
 class File(models.Model):
@@ -62,8 +61,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     password = models.CharField(max_length=255, blank=False, null=False)
     is_staff = models.BooleanField(default=False)
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
 
     class Meta:
         db_table = 'user'
