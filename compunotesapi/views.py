@@ -3,6 +3,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.decorators import action
 
 from .models import File, Tag
 from .serializers import UserSerializer, FileSerializer, TagSerializer
@@ -61,9 +62,33 @@ class FileViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=201, headers=headers)
 
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def add_tag(self, request, pk=None):
+        file = self.get_object()
+        tag_id = request.data.get('tag')
+        if tag_id:
+            tag, created = Tag.objects.get_or_create(id=tag_id)
+            file.tags.add(tag)
+            return Response({'status': 'tag added'})
+        else:
+            return Response({'detail': 'No tag provided.'}, status=400)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def remove_tag(self, request, pk=None):
+        file = self.get_object()
+        tag_id = request.data.get('tag')
+        if tag_id:
+            try:
+                tag = Tag.objects.get(id=tag_id)
+                file.tags.remove(tag)
+                return Response({'status': 'tag removed'})
+            except Tag.DoesNotExist:
+                return Response({'detail': 'Tag not found.'}, status=404)
+        else:
+            return Response({'detail': 'No tag provided.'}, status=400)
+
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TagSerializer
-    queryset = Tag.objects.all()
 
     def get_queryset(self):
         id = self.request.query_params.get('id')
