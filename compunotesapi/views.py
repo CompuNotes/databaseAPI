@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
+from rest_framework import filters
 
 from .models import File, Tag, Rating
 from .serializers import UserSerializer, FileSerializer, TagSerializer
@@ -23,6 +24,8 @@ class UserDetail(generics.RetrieveUpdateDestroyAPIView):
 class FileViewSet(viewsets.ModelViewSet):
     serializer_class = FileSerializer
     authentication_classes = [JWTAuthentication]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title', 'tags__name']
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
