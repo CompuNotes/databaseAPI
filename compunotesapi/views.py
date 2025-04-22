@@ -1,4 +1,5 @@
 from rest_framework import viewsets, generics, status
+from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
@@ -20,6 +21,13 @@ class UserDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+class AuthenticatedUserDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
 
 class FileViewSet(viewsets.ModelViewSet):
     serializer_class = FileSerializer
