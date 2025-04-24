@@ -8,7 +8,7 @@ from rest_framework.decorators import action
 from rest_framework import filters
 
 from .models import File, Tag, Rating
-from .serializers import UserSerializer, FileSerializer, TagSerializer
+from .serializers import UserSerializer, FileSerializer, TagSerializer, UserDetailSerializer
 
 User = get_user_model()
 
@@ -26,7 +26,7 @@ class AuthenticatedUserDetailView(APIView):
 
     def get(self, request):
         user = request.user
-        serializer = UserSerializer(user)
+        serializer = UserDetailSerializer(user)
         return Response(serializer.data)
 
 class FileViewSet(viewsets.ModelViewSet):

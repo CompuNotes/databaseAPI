@@ -25,6 +25,13 @@ class UserSerializer(serializers.ModelSerializer):
             user.save()
         return user
 
+class UserDetailSerializer(serializers.ModelSerializer):
+#    files = serializers.SlugRelatedField(many=True, slug_field='user', queryset=File.objects.all())
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'username','file_set']
+
 class LoginSerializer(serializers.ModelSerializer):
 
     class Meta:
