@@ -50,18 +50,12 @@ class FileSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     tags = serializers.SlugRelatedField(many=True, slug_field='name', queryset=Tag.objects.all())
     user = serializers.SlugRelatedField(read_only=True, slug_field='username')
-    rating = serializers.SerializerMethodField(read_only=True)
     file = serializers.FileField()
+    rating = serializers.FloatField(source='avg_rating',read_only=True)
 
     class Meta:
         model = File
         fields = ['id', 'title', 'file', 'user', 'tags', 'rating']
-
-    def get_rating(self, obj):
-        ratings = Rating.objects.filter(file_id=obj.id)
-        if ratings:
-            return sum([rating.rating for rating in ratings]) / len(ratings)
-        return 0
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')

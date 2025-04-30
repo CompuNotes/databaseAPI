@@ -6,6 +6,8 @@ from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 from rest_framework import filters
+from django.db.models import Avg, Value, FloatField
+from django.db.models.functions import Coalesce
 
 from .models import File, Tag, Rating
 from .serializers import UserSerializer, FileSerializer, TagSerializer, UserDetailSerializer
@@ -34,7 +36,7 @@ class FileViewSet(viewsets.ModelViewSet):
     authentication_classes = [JWTAuthentication]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'tags__name', 'user__username']
-    ordering_fields = ['rating']
+    ordering_fields = ['avg_rating', 'title']
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
@@ -46,14 +48,22 @@ class FileViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         id = self.request.query_params.get('id')
         tag = self.request.query_params.get('tags')
+        queryset = File.objects.all()
+        # Annotate the queryset with the calculated 'avg_rating'
+        queryset = queryset.annotate(
+            avg_rating=Coalesce(
+                Avg('rating__rating'),
+                Value(0),
+                output_field=FloatField()
+            )
+        )
+
         if id is not None:
-            queryset = File.objects.filter(id=id)
-            return queryset
+            queryset = queryset.filter(id=id)
         elif tag is not None:
-            queryset = File.objects.filter(tag=tag)
-            return queryset
-        else:
-            return File.objects.all()
+            queryset = queryset.filter(tag=tag)
+
+        return queryset
 
     def create(self, request, *args, **kwargs):
         user = request.user
