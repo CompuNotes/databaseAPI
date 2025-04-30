@@ -33,7 +33,7 @@ class FileViewSet(viewsets.ModelViewSet):
     serializer_class = FileSerializer
     authentication_classes = [JWTAuthentication]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title', 'tags__name']
+    search_fields = ['title', 'tags__name', 'user__username']
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
