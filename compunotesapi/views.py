@@ -32,8 +32,9 @@ class AuthenticatedUserDetailView(APIView):
 class FileViewSet(viewsets.ModelViewSet):
     serializer_class = FileSerializer
     authentication_classes = [JWTAuthentication]
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title', 'tags__name', 'user__username']
+    ordering_fields = ['rating']
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
