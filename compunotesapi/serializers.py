@@ -30,7 +30,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'username','file_set']
+        fields = ['id', 'email', 'username']
 
 class LoginSerializer(serializers.ModelSerializer):
 

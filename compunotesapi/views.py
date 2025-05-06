@@ -46,8 +46,8 @@ class FileViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-        id = self.request.query_params.get('id')
         tag = self.request.query_params.get('tags')
+        user = self.request.query_params.get('user')
         queryset = File.objects.all()
         # Annotate the queryset with the calculated 'avg_rating'
         queryset = queryset.annotate(
@@ -58,10 +58,10 @@ class FileViewSet(viewsets.ModelViewSet):
             )
         )
 
-        if id is not None:
-            queryset = queryset.filter(id=id)
-        elif tag is not None:
+        if tag is not None:
             queryset = queryset.filter(tag=tag)
+        if user is not None:
+            queryset = queryset.filter(user=user)
 
         return queryset
 
